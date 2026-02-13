@@ -16,6 +16,10 @@ export POSTGRES_USER POSTGRES_PASSWORD POSTGRES_DB TZ
 start:
 	@mkdir -p $(POSTGRES_DATA_DIR)
 	@docker-compose up -d
+	@until docker exec $(POSTGRES_CONTAINER_NAME) pg_isready -U postgres -q 2>/dev/null; do sleep 1; done; true
+	@docker exec $(POSTGRES_CONTAINER_NAME) psql -U postgres -c "DO \$$$$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='$(POSTGRES_USER)') THEN CREATE ROLE $(POSTGRES_USER) WITH LOGIN PASSWORD '$(shell echo '$(POSTGRES_PASSWORD)' | sed "s/'/''/g")'; END IF; END \$$$$;" 2>/dev/null || true
+	@docker exec $(POSTGRES_CONTAINER_NAME) psql -U postgres -tAc "SELECT 1 FROM pg_database WHERE datname='$(POSTGRES_DB)'" 2>/dev/null | grep -q 1 || docker exec $(POSTGRES_CONTAINER_NAME) psql -U postgres -c "CREATE DATABASE $(POSTGRES_DB) OWNER $(POSTGRES_USER);" 2>/dev/null || true
+	@docker exec $(POSTGRES_CONTAINER_NAME) psql -U postgres -d $(POSTGRES_DB) -c "GRANT ALL ON SCHEMA public TO $(POSTGRES_USER);" 2>/dev/null || true
 	@echo "PostgreSQL started!"
 	@echo "Host: localhost"
 	@echo "Port: $(POSTGRES_PORT)"

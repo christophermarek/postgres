@@ -24,9 +24,9 @@ make status
 
 view logs
 
-```bas h
+```bash
 make logs
-``` 
+```
 
 **Connection:**
 Connect from the host using the URL printed after `make start`, or set `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB` in the Makefile or environment before running `make start`. Data is stored in `./data/postgres/`.
